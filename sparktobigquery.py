@@ -27,3 +27,29 @@ schema = StructType([
 
 
 activationDF = kafkaDF.select(from_json(kafkaDF["value"].cast("string"), schema).alias("activation"))
+
+df = activationDF.select(
+    "activation.pair",
+    "activation.pairNormalized",
+    "activation.timestamp",
+    "activation.last",
+    "activation.high",
+    "activation.low",
+    "activation.bid",
+    "activation.ask",
+    "activation.open",
+    "activation.volume",
+    "activation.average",
+    "activation.daily",
+    "activation.dailyPercent",
+    "activation.denominatorSymbol",
+    "activation.numeratorSymbol"
+    )
+
+names = ['BTCUSDT','ETHUSDT','XRPUSDT','LTCUSDT','XLMUSDT']
+
+modelCountDF = df.filter(df.pair.isin(names))
+
+
+modelCountQuery = modelCountDF.writeStream.outputMode("append").format("bigquery").option("table", "dataset.cryptocurrencies").option("checkpointLocation", "/path/to/checkpoint/dir/in/hdfs").option("credentialsFile", "/home/bayramberkdsde/sw.json").option("failOnDataLoss", False).option("truncate",False).start().awaitTermination()
+
